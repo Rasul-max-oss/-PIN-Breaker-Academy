@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Взлом PIN-кода</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0e1a;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .start-screen {
+            background: #0f1219;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 550px;
+            text-align: center;
+            border: 1px solid #2a2f3a;
+        }
+
+        .start-screen h1 {
+            color: #4c9aff;
+            font-size: 28px;
+            margin-bottom: 25px;
+        }
+
+        .start-screen .description {
+            color: #ccc;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .start-screen .description p {
+            margin-bottom: 12px;
+        }
+
+        .start-screen .levels-info {
+            background: #06080f;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .start-screen .levels-info h3 {
+            color: #ffaa44;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .start-screen .levels-info ul {
+            list-style: none;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .start-screen .levels-info li {
+            padding: 5px 0;
+        }
+
+        .start-btn {
+            background: #4c9aff;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 8px;
+            color: white;
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .start-btn:hover {
+            background: #3a7bc2;
+        }
+
+        .game-container {
+            background: #0f1219;
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            gap: 30px;
+        }
+
+        .left-panel {
+            flex: 1;
+        }
+
+        .right-panel {
+            width: 220px;
+            background: #06080f;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .level-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #2a2f3a;
+        }
+
+        .level {
+            color: #4c9aff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .attempts {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .attempts span {
+            color: #ffaa44;
+            font-weight: bold;
+        }
+
+        .pin-area {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .stars {
+            font-size: 42px;
+            letter-spacing: 8px;
+            color: #4c9aff;
+            background: #06080f;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: monospace;
+            margin-bottom: 15px;
+        }
+
+        .pin-input {
+            width: 100%;
+            background: #06080f;
+            border: 1px solid #2a2f3a;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 24px;
+            text-align: center;
+            font-family: monospace;
+            color: #fff;
+            letter-spacing: 4px;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .key {
+            background: #1a1e2a;
+            border: 1px solid #2a2f3a;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 24px;
+            font-family: monospace;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .key:active {
+            background: #2a2f3a;
+            transform: translateY(1px);
+        }
+
+        .key-special {
+            background: #2a2f3a;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .actions button {
+            flex: 1;
+            background: #1a1e2a;
+            border: 1px solid #2a2f3a;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: monospace;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .actions button:active {
+            background: #2a2f3a;
+        }
+
+        .message-box {
+            text-align: center;
+            width: 100%;
+        }
+
+        .message-text {
+            font-size: 28px;
+            font-weight: bold;
+            font-family: monospace;
+            word-break: break-word;
+            line-height: 1.3;
+            text-align: center;
+        }
+
+        .message-error {
+            color: #ff6b6b;
+        }
+
+        .message-success {
+            color: #4c9aff;
+        }
+
+        .message-congrats {
+            color: #ffaa44;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                flex-direction: column;
+            }
+            .right-panel {
+                width: 100%;
+            }
+            .message-text {
+                font-size: 20px;
+            }
+            .start-screen {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        const PINS = ["42", "7351", "280649", "59312748"];
+        const LENGTHS = [2, 4, 6, 8];
+        const SECRET_WORD = "КИБЕРБЕЗОПАСНОСТЬ";
+        
+        let currentLevel = 0;
+        let currentInput = "";
+        let attempts = 0;
+        let gameCompleted = false;
+        let gameStarted = false;
+        
+        function renderStartScreen() {
+            const app = document.getElementById("app");
+            app.innerHTML = `
+                <div class="start-screen">
+                    <h1>ВЗЛОМ СИСТЕМЫ</h1>
+                    <div class="description">
+                        <p>Ваша задача — взломать защищенную систему методом перебора PIN-кодов.</p>
+                        <p>Система состоит из 4 уровней защиты. Каждый уровень требует ввода PIN-кода определенной длины.</p>
+                        <p>После успешного взлома всех 4 уровней вы получите секретное слово.</p>
+                    </div>
+                    <div class="levels-info">
+                        <h3>УРОВНИ ЗАЩИТЫ:</h3>
+                        <ul>
+                            <li>УРОВЕНЬ 1 — 2-значный PIN-код</li>
+                            <li>УРОВЕНЬ 2 — 4-значный PIN-код</li>
+                            <li>УРОВЕНЬ 3 — 6-значный PIN-код</li>
+                            <li>УРОВЕНЬ 4 — 8-значный PIN-код</li>
+                        </ul>
+                    </div>
+                    <button class="start-btn" id="startBtn">НАЧАТЬ ВЗЛОМ</button>
+                </div>
+            `;
+            
+            document.getElementById("startBtn").addEventListener("click", function() {
+                gameStarted = true;
+                renderGameScreen();
+            });
+        }
+        
+        function renderGameScreen() {
+            const app = document.getElementById("app");
+            app.innerHTML = `
+                <div class="game-container">
+                    <div class="left-panel">
+                        <div class="level-info">
+                            <div class="level" id="levelText">УРОВЕНЬ 1 (2 ЦИФРЫ)</div>
+                            <div class="attempts">ПОПЫТКИ: <span id="attemptCount">0</span></div>
+                        </div>
+
+                        <div class="pin-area">
+                            <div class="stars" id="starsDisplay">●●</div>
+                            <input type="text" class="pin-input" id="pinInput" readonly placeholder="ВВЕДИТЕ КОД">
+                        </div>
+
+                        <div class="keypad" id="keypad"></div>
+
+                        <div class="actions">
+                            <button id="resetLevelBtn">СБРОС УРОВНЯ</button>
+                            <button id="resetGameBtn">НОВАЯ ИГРА</button>
+                        </div>
+                    </div>
+
+                    <div class="right-panel">
+                        <div class="message-box">
+                            <div class="message-text" id="messageDisplay">ГОТОВ</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            initGame();
+        }
+        
+        function setMessage(text, type) {
+            const messageDisplay = document.getElementById("messageDisplay");
+            if (!messageDisplay) return;
+            
+            messageDisplay.textContent = text;
+            messageDisplay.className = "message-text";
+            
+            if (type === "error") {
+                messageDisplay.classList.add("message-error");
+            } else if (type === "success") {
+                messageDisplay.classList.add("message-success");
+            } else if (type === "congrats") {
+                messageDisplay.classList.add("message-congrats");
+            }
+        }
+        
+        function updateDisplay() {
+            const levelText = document.getElementById("levelText");
+            const attemptCount = document.getElementById("attemptCount");
+            const starsDisplay = document.getElementById("starsDisplay");
+            const pinInput = document.getElementById("pinInput");
+            
+            if (!levelText) return;
+            
+            const length = LENGTHS[currentLevel];
+            
+            let stars = "";
+            for (let i = 0; i < length; i++) {
+                stars += "●";
+            }
+            starsDisplay.textContent = stars;
+            pinInput.value = currentInput;
+            attemptCount.textContent = attempts;
+            
+            if (!gameCompleted) {
+                levelText.textContent = `УРОВЕНЬ ${currentLevel + 1} (${length} ЦИФРЫ)`;
+            } else {
+                levelText.textContent = "ИГРА ЗАВЕРШЕНА";
+            }
+        }
+        
+        function showVictoryScreen() {
+            document.body.innerHTML = `
+                <div style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    background: #0a0e1a;
+                    font-family: monospace;
+                    text-align: center;
+                    padding: 20px;
+                ">
+                    <div style="background: #0f1219; border-radius: 16px; padding: 40px; max-width: 550px; border: 1px solid #4c9aff;">
+                        <h1 style="color: #4c9aff; font-size: 32px; margin-bottom: 20px;">ДОСТУП ПОЛУЧЕН</h1>
+                        <p style="color: #fff; font-size: 18px; margin-bottom: 20px;">ВЫ ВЗЛОМАЛИ ВСЕ УРОВНИ ЗАЩИТЫ</p>
+                        <div style="background: #06080f; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                            <p style="color: #ffaa44; font-size: 14px; margin-bottom: 10px;">СЕКРЕТНОЕ СЛОВО:</p>
+                            <p style="color: #4c9aff; font-size: 24px; font-weight: bold; letter-spacing: 2px;">${SECRET_WORD}</p>
+                        </div>
+                        <div style="background: #06080f; padding: 12px; border-radius: 8px; margin-bottom: 30px;">
+                            <p style="color: #888; font-size: 12px;">ВЗЛОМАННЫЕ PIN-КОДЫ:</p>
+                            <p style="color: #ffaa44; font-size: 16px;">42 → 7351 → 280649 → 59312748</p>
+                        </div>
+                        <button id="restartBtn" style="background: #4c9aff; border: none; padding: 12px 30px; border-radius: 8px; color: white; font-family: monospace; font-size: 16px; cursor: pointer;">НАЧАТЬ ЗАНОВО</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById("restartBtn").addEventListener("click", function() {
+                window.location.reload();
+            });
+        }
+        
+        function nextLevel() {
+            if (currentLevel === PINS.length - 1) {
+                gameCompleted = true;
+                updateDisplay();
+                setMessage("ПОБЕДА! СЕКРЕТНОЕ СЛОВО ПОЛУЧЕНО", "congrats");
+                
+                setTimeout(function() {
+                    showVictoryScreen();
+                }, 2000);
+                return;
+            }
+            
+            currentLevel++;
+            currentInput = "";
+            attempts = 0;
+            updateDisplay();
+            setMessage(`УРОВЕНЬ ${currentLevel + 1}`, "congrats");
+        }
+        
+        function checkPin() {
+            if (gameCompleted) {
+                setMessage("ИГРА ЗАВЕРШЕНА", "error");
+                return;
+            }
+            
+            const requiredLength = LENGTHS[currentLevel];
+            
+            if (currentInput.length !== requiredLength) {
+                setMessage(`НУЖНО ${requiredLength} ЦИФР`, "error");
+                return;
+            }
+            
+            attempts++;
+            updateDisplay();
+            
+            if (currentInput === PINS[currentLevel]) {
+                setMessage(`ВЕРНО! ${attempts} ПОПЫТОК`, "success");
+                
+                if (currentLevel === PINS.length - 1) {
+                    setTimeout(function() {
+                        nextLevel();
+                    }, 1000);
+                } else {
+                    setTimeout(function() {
+                        nextLevel();
+                    }, 1000);
+                }
+            } else {
+                setMessage(`НЕВЕРНО (${attempts})`, "error");
+                currentInput = "";
+                updateDisplay();
+            }
+        }
+        
+        function addDigit(digit) {
+            if (gameCompleted) return;
+            
+            const maxLength = LENGTHS[currentLevel];
+            if (currentInput.length < maxLength) {
+                currentInput += digit;
+                updateDisplay();
+            } else {
+                setMessage(`МАКСИМУМ ${maxLength}`, "error");
+            }
+        }
+        
+        function deleteLast() {
+            if (gameCompleted) return;
+            currentInput = currentInput.slice(0, -1);
+            updateDisplay();
+            setMessage("УДАЛЕНО", "success");
+        }
+        
+        function clearInput() {
+            if (gameCompleted) return;
+            currentInput = "";
+            updateDisplay();
+            setMessage("ОЧИЩЕНО", "success");
+        }
+        
+        function resetLevel() {
+            if (gameCompleted) {
+                resetGame();
+                return;
+            }
+            currentInput = "";
+            attempts = 0;
+            updateDisplay();
+            setMessage(`УРОВЕНЬ СБРОШЕН`, "success");
+        }
+        
+        function resetGame() {
+            currentLevel = 0;
+            currentInput = "";
+            attempts = 0;
+            gameCompleted = false;
+            updateDisplay();
+            setMessage("НОВАЯ ИГРА", "success");
+        }
+        
+        function createKeypad() {
+            const keypadDiv = document.getElementById("keypad");
+            if (!keypadDiv) return;
+            
+            keypadDiv.innerHTML = "";
+            const digits = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '0'];
+            
+            digits.forEach(function(digit) {
+                const btn = document.createElement('button');
+                btn.textContent = digit;
+                btn.className = 'key';
+                btn.addEventListener('click', function() { addDigit(digit); });
+                keypadDiv.appendChild(btn);
+            });
+            
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'DEL';
+            delBtn.className = 'key key-special';
+            delBtn.addEventListener('click', deleteLast);
+            keypadDiv.appendChild(delBtn);
+            
+            const clearBtn = document.createElement('button');
+            clearBtn.textContent = 'CLEAR';
+            clearBtn.className = 'key key-special';
+            clearBtn.addEventListener('click', clearInput);
+            keypadDiv.appendChild(clearBtn);
+            
+            const enterBtn = document.createElement('button');
+            enterBtn.textContent = 'ENTER';
+            enterBtn.className = 'key key-special';
+            enterBtn.addEventListener('click', checkPin);
+            keypadDiv.appendChild(enterBtn);
+        }
+        
+        function initGame() {
+            currentLevel = 0;
+            currentInput = "";
+            attempts = 0;
+            gameCompleted = false;
+            
+            createKeypad();
+            updateDisplay();
+            setMessage("ВВЕДИТЕ PIN-КОД", "success");
+            
+            const resetLevelBtn = document.getElementById("resetLevelBtn");
+            const resetGameBtn = document.getElementById("resetGameBtn");
+            const pinInput = document.getElementById("pinInput");
+            
+            if (resetLevelBtn) resetLevelBtn.addEventListener("click", resetLevel);
+            if (resetGameBtn) resetGameBtn.addEventListener("click", resetGame);
+            if (pinInput) {
+                pinInput.addEventListener("focus", function(e) {
+                    e.target.blur();
+                });
+            }
+        }
+        
+        renderStartScreen();
+    </script>
+</body>
+</html>
